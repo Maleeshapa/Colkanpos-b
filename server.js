@@ -6,7 +6,6 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 
-
 //Controllers
 const SupplierController = require("./controller/SupplerController");
 const UserController = require("./controller/UserController");
@@ -22,8 +21,8 @@ const ExpensesCatController = require("./controller/ExpensesCatController");
 const ReportController = require("./controller/Reports/ReportController");
 const ProductNStockController = require("./controller/Reports/ProductStockController");
 const StockHistoryController = require('./controller/StockHistoryController');
-const SwitchController = require('./controller/SwitchController');
-const InvoiceProductController = require('./controller/InvoiceProduct')
+const InvoiceProductController = require('./controller/InvoiceProduct');
+const CustomerController = require('./controller/CustomerController');
 
 const app = express();
 const PORT = process.env.PORT;
@@ -33,115 +32,15 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads', 'purchase-orders')));
 
-const baseUploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(baseUploadDir)) {
-    fs.mkdirSync(baseUploadDir);
-}
-
-const uploadDir = path.join(baseUploadDir, 'purchase-orders');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
-
-// Configure multer storage and file naming
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-// File filter to restrict file types
-const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Invalid file type. Only PNG, JPEG, and PDF files are allowed.'), false);
-    }
-};
-
-// Configure multer upload
-const upload = multer({ 
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB file size limit
-    }
-});
-
-// Purchase order upload route
-app.post('/api/purchase-orders/upload', upload.array('files', 5), (req, res) => {
-    try {
-        // Check if files were uploaded
-        if (!req.files || req.files.length === 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'No files uploaded' 
-            });
-        }
-
-        // Process uploaded files
-        const uploadedFiles = req.files.map(file => ({
-            originalName: file.originalname,
-            filename: file.filename,
-            path: file.path,
-            size: file.size
-        }));
-
-        // Here you might want to add additional logic like:
-        // - Saving file metadata to a database
-        // - Associating files with a specific purchase order
-        // - Any additional processing
-
-        res.json({
-            success: true,
-            message: 'Files uploaded successfully',
-            files: uploadedFiles
-        });
-    } catch (error) {
-        console.error('Upload error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error processing upload',
-            error: error.message 
-        });
-    }
-});
-
-// Error handling middleware for multer
-app.use((err, req, res, next) => {
-    if (err instanceof multer.MulterError) {
-        // A Multer error occurred when uploading
-        return res.status(400).json({
-            success: false,
-            message: err.message || 'File upload error'
-        });
-    } else if (err) {
-        // An unknown error occurred
-        return res.status(500).json({
-            success: false,
-            message: err.message || 'An unexpected error occurred'
-        });
-    }
-    next();
-});
-
-// status endpoint
-app.get('/api/switch', SwitchController.getStatus);
-app.post('/api/switch', SwitchController.updateStatus);
 
 //user routes
 app.post("/user", UserController.createUser);
 app.get("/users", UserController.getAllUsers);
 app.get("/user/:id", UserController.getUserById);
+app.get('/user/name/:name', UserController.getUserByName);
 app.put("/user/:id", UserController.updateUser);
 app.delete("/user/:id", UserController.deleteUser);
 app.post("/userLogin", UserController.userLogin);
-app.get("/users/hidden/:is_hidden", UserController.getUsersByHiddenStatus);
 
 //supplier routes
 app.post("/supplier", SupplierController.createSupplier);
@@ -157,6 +56,16 @@ app.get("/category/:id", CategoryController.getCategoryById);
 app.put("/category/:id", CategoryController.updateCategory);
 app.delete("/category/:id", CategoryController.deleteCustomer);
 
+//customer routes
+app.post('/customer', CustomerController.createCustomer);
+app.get('/customers', CustomerController.getAllCustomers);
+app.get('/customer/:id', CustomerController.getCustomerById);
+app.put('/customer/:id', CustomerController.updateCustomer);
+app.delete('/customer/:id', CustomerController.deleteCustomer);
+app.get("/customer/cusCode/:code", CustomerController.getCustomerByCode);
+app.get("/customer/cusName/:name", CustomerController.getCustomerByName);
+app.get('/customers/suggestions', CustomerController.getCustomerSuggestions);
+
 //product routes
 app.post("/product", ProductController.createProduct);
 app.get("/products", ProductController.getAllProducts);
@@ -166,7 +75,6 @@ app.delete("/product/:id", ProductController.deleteProduct);
 app.get("/product/productName/:name", ProductController.getProductByName);
 app.get('/product/codeOrName/:value', ProductController.getProductByCodeOrName);
 app.get('/products/suggestions', ProductController.getProductSuggestions);
-
 
 //stock routes
 app.post("/stock", StockController.createStock);
@@ -186,6 +94,7 @@ app.get("/invoice/:id", InvoiceController.getInvoiceById);
 app.put("/invoice/:id", InvoiceController.updateInvoice);
 app.delete("/invoice/:id", InvoiceController.deleteInvoice);
 app.get('/invoice/invoiceNo/:num', InvoiceController.getInvoiceByNo);
+app.get('/invoice/last', InvoiceController.getLastInvoiceNumber);
 
 //invoiceProduct Route
 app.post('/invoiceProduct', InvoiceProductController.createInvoiceProduct);

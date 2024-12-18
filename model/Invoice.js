@@ -1,7 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../dbConfig");
-const Product = require("./Products");
-const Stock = require("./Stock");
+const Customer = require("./Customer");
 
 const Invoice = sequelize.define(
     "Invoice",
@@ -19,20 +18,24 @@ const Invoice = sequelize.define(
             type: DataTypes.DATE,
             allowNull: false,
         },
-        cusName: {
+        status: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        cusAddress: {
+        image: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        store: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        cusJob: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
-        cusOffice: {
-            type: DataTypes.STRING,
+        cusId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: Customer,
+                key: "cusId",
+            },
             allowNull: false,
         },
     },
@@ -41,4 +44,9 @@ const Invoice = sequelize.define(
         timestamps: false,
     }
 );
+
+Invoice.belongsTo(Customer, {
+    foreignKey: "cusId",
+    as: "customer",
+});
 module.exports = Invoice;

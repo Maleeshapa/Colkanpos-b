@@ -16,9 +16,9 @@ const createTransaction = async (req, res) => {
             userId,
         } = req.body;
 
-        if (!transactionType || !price || !dateTime) {
-            return res.status(400).json({ error: "All fields are required." });
-        }
+        // if (!transactionType || !price || !dateTime) {
+        //     return res.status(400).json({ error: "All fields are required." });
+        // }
 
         // Validate invoice
         const invoice = await Invoice.findByPk(invoiceId);

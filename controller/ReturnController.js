@@ -3,6 +3,7 @@ const Product = require("../model/Products");
 const Return = require("../model/Return");
 const Store = require("../model/Store");
 const User = require("../model/User");
+const Stock = require("../model/Stock");
 
 const createReturn = async (req, res) => {
     try {
@@ -15,6 +16,7 @@ const createReturn = async (req, res) => {
             storeId,
             userId,
             invoiceId,
+            stockId,
         } = req.body;
 
         // Ensure all required fields are present
@@ -22,49 +24,53 @@ const createReturn = async (req, res) => {
             return res.status(400).json({ error: "All fields are required." });
         }
 
-        // Check if product exists
+        // Validate entities
         const product = await Product.findByPk(productId);
-        if (!product) {
-            return res.status(400).json({ message: 'Invalid product ID' });
-        }
+        if (!product) return res.status(400).json({ message: 'Invalid product ID' });
 
-        // Check if store exists
         const store = await Store.findByPk(storeId);
-        if (!store) {
-            return res.status(400).json({ message: 'Invalid store ID' });
-        }
+        if (!store) return res.status(400).json({ message: 'Invalid store ID' });
 
-        // Check if user exists
         const user = await User.findByPk(userId);
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid user ID' });
-        }
+        if (!user) return res.status(400).json({ message: 'Invalid user ID' });
 
-        // Check if invoice exists
         const invoice = await Invoice.findByPk(invoiceId);
-        if (!invoice) {
-            return res.status(400).json({ message: 'Invalid invoice ID' });
-        }
+        if (!invoice) return res.status(400).json({ message: 'Invalid invoice ID' });
+
+        const stock = await Stock.findByPk(stockId);
+        if (!stock) return res.status(400).json({ message: 'Invalid stock ID' });
+
+        // Calculate the return amount
+        const returnAmount = parseFloat(returnQty) * parseFloat(product.productProfit);
 
         // Create the return
         const newReturn = await Return.create({
             returnItemType,
-            returnItemDate,     
+            returnItemDate,
             returnQty,
             returnNote,
+            returnAmount,
             products_productId: productId,
             store_storeId: storeId,
             user_userId: userId,
             invoice_invoiceId: invoiceId,
+            stockId: stockId,
         });
 
-        // Fetch the newly created return with associated product, store, user, and invoice information
+        // If return type is "Exchange," adjust the stock quantity
+        if (returnItemType === "Exchange") {
+            const updatedStockQty = parseFloat(stock.stockQty) + parseFloat(returnQty);
+            await stock.update({ stockQty: updatedStockQty });
+        }
+
+        // Fetch the newly created return with associations
         const returnWithAssociations = await Return.findByPk(newReturn.returnItemId, {
             include: [
                 { model: Product, as: 'products' },
                 { model: Store, as: 'store' },
                 { model: User, as: 'user' },
                 { model: Invoice, as: 'invoice' },
+                { model: Stock, as: 'stock' },
             ],
         });
 
@@ -84,6 +90,7 @@ const getAllReturns = async (req, res) => {
                 { model: Store, as: 'store' },
                 { model: User, as: 'user' },
                 { model: Invoice, as: 'invoice' },
+                { model: Stock, as: 'stock' },
             ],
         });
         res.status(200).json(returns);
@@ -102,6 +109,7 @@ const getReturnById = async (req, res) => {
                 { model: Store, as: 'store' },
                 { model: User, as: 'user' },
                 { model: Invoice, as: 'invoice' },
+                { model: Stock, as: 'stock' },
             ],
         });
 
@@ -114,8 +122,9 @@ const getReturnById = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 module.exports = {
     createReturn,
     getAllReturns,
     getReturnById,
-}
+};

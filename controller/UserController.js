@@ -1,6 +1,5 @@
 const User = require("../model/User");
 const Store = require("../model/Store");
-const Switch = require("../model/Switch");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
@@ -152,9 +151,6 @@ const createUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.findAll({
-            where: {
-                is_hidden: 0, // Only fetch users that are not hidden
-            },
             include: [{
                 model: Store,
                 as: 'store',
@@ -163,27 +159,6 @@ const getAllUsers = async (req, res) => {
         res.json(users);
     } catch (error) {
         res.status(500).json({ error: error.message });
-    }
-};
-
-// Example function to hide a user
-const hideUser = async (req, res) => {
-    const { userId } = req.params; // Assuming you pass userId in the URL
-
-    try {
-        const user = await User.findByPk(userId);
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        // Hide the user by setting is_hidden to 1
-        user.is_hidden = 1;
-        await user.save();
-
-        res.json({ message: "User hidden successfully" });
-    } catch (error) {
-        console.error("Error hiding user:", error);
-        res.status(500).json({ error: "Internal Server Error" });
     }
 };
 
@@ -207,6 +182,36 @@ const getUserById = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+// Get a single user by name
+const getUserByName = async (req, res) => {
+    try {
+        const { name } = req.params;
+
+        // Find user by username
+        const user = await User.findOne({
+            where: { userName: name },
+            include: [
+                {
+                    model: Store,
+                    as: 'store',
+                },
+            ],
+        });
+
+        // If no user found, return 404
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Return the user details
+        res.status(200).json(user);
+    } catch (error) {
+        // Handle any errors
+        res.status(500).json({ error: error.message });
+    }
+};
+
 
 // Update user
 const updateUser = async (req, res) => {
@@ -386,46 +391,12 @@ const userLogin = async (req, res) => {
 };
 
 
-
-// Get users by is_hidden status
-const getUsersByHiddenStatus = async (req, res) => {
-    try {
-        const { is_hidden } = req.params; // Get is_hidden status from request parameters
-
-        if (is_hidden !== '0' && is_hidden !== '1') {
-            return res.status(400).json({ error: "Invalid is_hidden value. Use 0 (visible) or 1 (hidden)." });
-        }
-
-        // Fetch users based on is_hidden value
-        const users = await User.findAll({
-            where: {
-                is_hidden: is_hidden
-            },
-            include: [{
-                model: Store,
-                as: 'store',
-            }],
-        });
-
-        // Check if any users are found
-        if (!users.length) {
-            return res.status(404).json({ message: `No users found with is_hidden = ${is_hidden}.` });
-        }
-
-        res.status(200).json(users);
-    } catch (error) {
-        res.status(500).json({ error: `An error occurred: ${error.message}` });
-    }
-};
-
-
 module.exports = {
     createUser,
     getAllUsers,
     getUserById,
+    getUserByName,
     updateUser,
     deleteUser,
     userLogin,
-    hideUser,
-    getUsersByHiddenStatus
 }

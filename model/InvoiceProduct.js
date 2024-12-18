@@ -48,6 +48,10 @@ const InvoiceProduct = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        invoiceProductStatus: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
     },
     {
         tableName: "invoiceproduct",
