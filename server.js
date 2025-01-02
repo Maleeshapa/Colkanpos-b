@@ -25,7 +25,9 @@ const ReportController = require("./controller/Reports/ReportController");
 const ProductNStockController = require("./controller/Reports/ProductStockController");
 const InvoiceProductController = require('./controller/InvoiceProduct');
 const CustomerController = require('./controller/CustomerController');
-const DeliveryNoteController=require('./controller/DeliveryNoteController');
+const DeliveryNoteController = require('./controller/DeliveryNoteController');
+const CostingController = require('./controller/CostingController');
+const ChequeController = require('./controller/ChequeController');
 // const CostingController = require("./controller/CostingController");
 // const CostingController = require("./controller/");
 
@@ -97,6 +99,9 @@ app.get("/stockPayments", StockPaymentController.getAllStockPayments);
 app.get("/stockPayment/:id", StockPaymentController.getStockPaymentById);
 app.put("/stockPayment/:id", StockPaymentController.updateStockPayment);
 
+//cheque routes
+app.post("/cheque", ChequeController.addCheque);
+
 //Stock History routes
 app.get('/stockHistory', StockHistoryController.getAllStockHistory);
 
@@ -105,6 +110,7 @@ app.post("/invoice", InvoiceController.createInvoice);
 app.get("/invoices", InvoiceController.getAllInvoice);
 app.get("/invoice/:id", InvoiceController.getInvoiceById);
 app.put("/invoice/:id", InvoiceController.updateInvoice);
+app.put("/invoiceTime/:id", InvoiceController.updateInvoicetime);
 app.delete("/invoice/:id", InvoiceController.deleteInvoice);
 app.get('/invoice/invoiceNo/:num', InvoiceController.getInvoiceByNo);
 app.get('/invoice/last', InvoiceController.getLastInvoiceNumber);
@@ -117,6 +123,7 @@ app.get('/invoiceProducts/:invoiceId', InvoiceProductController.getInvoiceById)
 app.delete('/invoiceProduct/:invoiceId', InvoiceProductController.deleteInvoiceProduct)
 app.get('/invoiceProduct/:num', InvoiceProductController.getInvoiceProductsByNo);
 app.put('/invoiceProducts/:id', InvoiceProductController.updateInvoiceProductStatus);
+app.put('/invoiceProductsQty/:id', InvoiceProductController.updateInvoiceProductQty);
 
 //Delivery note Route
 app.post('/deliveryNote', DeliveryNoteController.createDeliveryNote);
@@ -125,6 +132,7 @@ app.get('/deliveryNotes/:invoiceId', DeliveryNoteController.getDeliveryNoteById)
 app.delete('/deliveryNote/:invoiceId', DeliveryNoteController.deleteDeliveryNote)
 app.get('/deliveryNote/:num', DeliveryNoteController.getDeliveryNoteByNo);
 app.put('/deliveryNotes/:id', DeliveryNoteController.updateDeliveryNoteStatus);
+app.put('/deliveryNotesStatus/:id', DeliveryNoteController.updateStatus);
 
 //transaction routes
 app.post("/transaction", TransactionController.createTransaction);
@@ -168,6 +176,12 @@ app.delete("/expensesCat/:id", ExpensesCatController.deleteExpensesCat);
 app.get("/getReports", ReportController.getReports);
 app.get("/productStock", ProductNStockController.getStockReports);
 
+// //Costing routes
+app.post("/costing", CostingController.createCosting);
+app.get("/costings", CostingController.getAllCostings);
+app.get("/costing/:id", CostingController.getCostingById);
+app.put("/costing/:id", CostingController.updateCosting);
+
 // Sync the database
 sequelize
     .sync()
@@ -193,11 +207,6 @@ app.get('/download/invoice/:filename', (req, res) => {
         res.status(404).json({ error: "File not found" });
     }
 });
-
-
-// app.post("/api/costing", CostingController.createCosting);
-// app.get("/api/costings", CostingController.getAllCostings);
-// app.get("/api/costing/:id", CostingController.getCostingById);
 
 // Start the server
 app.listen(PORT, () => {

@@ -57,6 +57,7 @@ const createInvoice = async (req, res) => {
             purchaseNo,
             store,
             cusId,
+            invoiceTime='1'
         } = req.body;
 
         const existingInvoice = await Invoice.findOne({ where: { purchaseNo } });
@@ -72,7 +73,8 @@ const createInvoice = async (req, res) => {
             status,
             purchaseNo,
             store,
-            cusId
+            cusId,
+            invoiceTime
         });
 
         res.status(201).json(newInvoice);
@@ -192,7 +194,7 @@ const updateInvoice = async (req, res) => {
         const invoice = await Invoice.findByPk(id);
         if (invoice) {
             await invoice.update({
-                invoiceNo,
+                // invoiceNo,
                 invoiceDate,
                 totalAmount,
                 invoiceQty,
@@ -207,6 +209,22 @@ const updateInvoice = async (req, res) => {
         res.status(500).json({ message: `An error occurred: ${error.message}` });
     }
 };
+
+const updateInvoicetime = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { invoiceTime } = req.body;
+        const invoice = await Invoice.findByPk(id);
+        if (invoice) {
+            await invoice.update({ invoiceTime });
+            res.status(200).json(invoice);
+        } else {
+            res.status(404).json({ message: "Invoice not found" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: `An error occurred: ${error.message}` });
+    }
+}
 // Delete a Invoice
 const deleteInvoice = async (req, res) => {
     try {
@@ -264,8 +282,10 @@ module.exports = {
     getInvoiceById,
     getInvoiceByNo,
     updateInvoice,
+    updateInvoicetime,
     deleteInvoice,
     getLastInvoiceNumber,
     generateNextInvoiceNumber,
     addImage,
+    
 };

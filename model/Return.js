@@ -1,10 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../dbConfig");
-const Product = require("./Products");
 const Store = require("./Store");
 const User = require("./User");
 const Invoice = require("./Invoice");
-const Stock = require("./Stock");
 
 const Return = sequelize.define(
     "Return",
@@ -16,10 +14,6 @@ const Return = sequelize.define(
         },
         returnItemDate: {
             type: DataTypes.DATE,
-            allowNull: false,
-        },
-        returnAmount: {
-            type: DataTypes.FLOAT,
             allowNull: false,
         },
         store_storeId: {
@@ -46,14 +40,6 @@ const Return = sequelize.define(
             },
             allowNull: false,
         },
-        stockId: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: Stock,
-                key: "stockId",
-            },
-            allowNull: false,
-        },
     },
     {
         tableName: "returnItems",
@@ -71,10 +57,6 @@ Return.belongsTo(User, {
 Return.belongsTo(Invoice, {
     foreignKey: "invoice_invoiceId",
     as: "invoice",
-});
-Return.belongsTo(Stock, {
-    foreignKey: "stockId",
-    as: "stock",
 });
 
 module.exports = Return;

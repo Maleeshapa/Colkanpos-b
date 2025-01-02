@@ -41,6 +41,10 @@ const Invoice = sequelize.define(
                 key: "cusId",
             },
             allowNull: false,
+        },   
+        invoiceTime: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
         },
     },
     {

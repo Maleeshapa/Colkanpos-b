@@ -207,6 +207,28 @@ const updateInvoiceProductStatus = async (req, res) => {
   }
 };
 
+
+const updateInvoiceProductQty = async (req, res) => {
+  try {
+    const { id } = req.params; 
+    const { invoiceQty } = req.body;
+
+    const invoiceProduct = await InvoiceProduct.findByPk(id);
+
+    if (!invoiceProduct) {
+      return res.status(404).json({ message: 'Invoice product not found' });
+    }
+
+    invoiceProduct.invoiceQty = invoiceQty;
+    await invoiceProduct.save();
+
+    res.status(200).json({ message: 'Invoice product status updated successfully', invoiceProduct });
+  } catch (error) {
+    console.error('Error updating invoice product status:', error);
+    res.status(500).json({ message: 'Error updating invoice product status', error: error.message });
+  }
+};
+
 module.exports = {
   createInvoiceProduct,
   getAllInvoiceProducts,
@@ -214,4 +236,5 @@ module.exports = {
   getInvoiceById,
   getInvoiceProductsByNo,
   updateInvoiceProductStatus,
+  updateInvoiceProductQty
 };

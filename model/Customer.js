@@ -36,6 +36,10 @@ const Customer = sequelize.define(
         cusStore: {
             type: DataTypes.STRING,
             allowNull: false,
+        },        
+        cusEmail: {
+            type: DataTypes.STRING,
+            allowNull: true, 
         },
     },
     {

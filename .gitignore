@@ -5,3 +5,7 @@ node_modules/
 /.env
 /env
 /uploads
+.git
+./git
+/.git
+/git

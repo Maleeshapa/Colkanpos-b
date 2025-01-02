@@ -13,7 +13,7 @@ const createDeliveryNote = async (req, res) => {
         }
 
         for (const deliveryNote of deliveryNotes) {
-            const { productId, stockId, invoiceId, invoiceNo, totalAmount, invoiceQty,sendQty, deliveryStatus } = deliveryNote;
+            const { productId, stockId, invoiceId, invoiceNo, totalAmount, invoiceQty,sendQty,deliverdQty, deliveryStatus } = deliveryNote;
 
             // Check if the product exists
             const product = await Product.findByPk(productId);
@@ -36,7 +36,7 @@ const createDeliveryNote = async (req, res) => {
         // Process invoice products if all stock is sufficient
         const createdDeliveryStatus = [];
         for (const deliveryNote of deliveryNotes) {
-            const { productId, stockId, invoiceId, invoiceNo, totalAmount, invoiceQty,sendQty, deliveryStatus } = deliveryNote;
+            const { productId, stockId, invoiceId, invoiceNo, totalAmount, invoiceQty,sendQty,deliverdQty, deliveryStatus } = deliveryNote;
 
             // Create the invoice product
             const newDeliveryNote = await DeliveryNote.create({
@@ -47,6 +47,7 @@ const createDeliveryNote = async (req, res) => {
                 totalAmount,
                 invoiceQty,
                 sendQty,
+                deliverdQty,
                 deliveryStatus,
             });
 
@@ -165,25 +166,24 @@ const deleteDeliveryNote = async (req, res) => {
 const updateDeliveryNoteStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { sendQty } = req.body;
+        const { sendQty,deliverdQty,deliveryStatus } = req.body;
 
-        // Find the delivery note by its primary key
         const deliveryNote = await DeliveryNote.findByPk(id);
 
         if (!deliveryNote) {
             return res.status(404).json({ message: 'Delivery note not found' });
         }
 
-        // Validate the input quantity if provided
-        if (typeof sendQty !== 'undefined' && sendQty < 0) {
+        if (typeof sendQty !== 'undefined' && sendQty < 0 && typeof deliverdQty !== 'undefined' && deliverdQty < 0) {
             return res.status(400).json({ message: 'Invalid quantity provided' });
         }
 
-        if (typeof sendQty !== 'undefined') {
+        if (typeof sendQty !== 'undefined' && typeof deliverdQty !== 'undefined') {
+            deliveryNote.deliverdQty = deliverdQty;
             deliveryNote.sendQty = sendQty;
+            deliveryNote.deliveryStatus = deliveryStatus;
         }
 
-        // Save the changes
         await deliveryNote.save();
 
         res.status(200).json({ 
@@ -199,6 +199,35 @@ const updateDeliveryNoteStatus = async (req, res) => {
     }
 };
 
+const updateStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {deliveryStatus } = req.body;
+
+        const deliveryNote = await DeliveryNote.findByPk(id);
+
+        if (!deliveryNote) {
+            return res.status(404).json({ message: 'Delivery note not found' });
+        }
+
+        if (typeof deliveryStatus !== 'undefined') {
+            deliveryNote.deliveryStatus = deliveryStatus;
+        }
+
+        await deliveryNote.save();
+
+        res.status(200).json({ 
+            message: 'Delivery note updated successfully', 
+            deliveryNote 
+        });
+    } catch (error) {
+        console.error('Error updating delivery note status:', error);
+        res.status(500).json({ 
+            message: 'Error updating delivery note status', 
+            error: error.message 
+        });
+    }
+};
 
 module.exports = {
     createDeliveryNote,
@@ -207,4 +236,5 @@ module.exports = {
     getDeliveryNoteById,
     getDeliveryNoteByNo,
     updateDeliveryNoteStatus,
+    updateStatus
 };

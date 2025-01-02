@@ -2,7 +2,7 @@ const { Op } = require("sequelize");
 const Invoice = require("../../model/Invoice");
 const InvoiceProduct = require("../../model/InvoiceProduct");
 const Product = require("../../model/Products");
-const Return = require("../../model/Return");
+const ReturnProduct = require("../../model/ReturnProduct");
 const sequelize = require("sequelize");
 
 async function getReports(req, res) {
@@ -36,7 +36,7 @@ async function getReports(req, res) {
 
 // Utility function to calculate return amounts
 async function getReturnsSum(dateFilter = {}) {
-  const returnSum = await Return.sum('returnAmount', {
+  const returnSum = await ReturnProduct.sum('returnAmount', {
     where: dateFilter,
   });
   return returnSum || 0;
@@ -69,7 +69,7 @@ async function revenueToday() {
   });
 
   const totalReturns = await getReturnsSum({
-    returnItemDate: dateFilter.invoiceDate,
+    returnDate: dateFilter.invoiceDate,
   });
 
   return (totalRevenue || 0) - totalReturns;
@@ -98,7 +98,7 @@ async function revenueYesterday() {
   });
 
   const totalReturns = await getReturnsSum({
-    returnItemDate: dateFilter.invoiceDate,
+    returnDate: dateFilter.invoiceDate,
   });
 
   return (totalRevenue || 0) - totalReturns;
@@ -126,7 +126,7 @@ async function revenueWeek() {
   });
 
   const totalReturns = await getReturnsSum({
-    returnItemDate: dateFilter.invoiceDate,
+    returnDate: dateFilter.invoiceDate,
   });
 
   return (totalRevenue || 0) - totalReturns;
@@ -154,7 +154,7 @@ async function revenueMonth() {
   });
 
   const totalReturns = await getReturnsSum({
-    returnItemDate: dateFilter.invoiceDate,
+    returnDate: dateFilter.invoiceDate,
   });
 
   return (totalRevenue || 0) - totalReturns;
@@ -183,7 +183,7 @@ async function revenueLastMonth() {
   });
 
   const totalReturns = await getReturnsSum({
-    returnItemDate: dateFilter.invoiceDate,
+    returnDate: dateFilter.invoiceDate,
   });
 
   return (totalRevenue || 0) - totalReturns;
@@ -215,7 +215,7 @@ async function monthlyRevenue() {
     });
 
     const returns = await getReturnsSum({
-      returnItemDate: dateFilter.invoiceDate,
+      returnDate: dateFilter.invoiceDate,
     });
 
     result.push({

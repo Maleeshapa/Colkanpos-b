@@ -2,62 +2,45 @@ const Invoice = require("../model/Invoice");
 const Return = require("../model/Return");
 const Store = require("../model/Store");
 const User = require("../model/User");
-const Stock = require("../model/Stock");
 
 const createReturn = async (req, res) => {
     try {
         const {
-            returnItemType,
             returnItemDate,
             storeId,
             userId,
             invoiceId,
-            stockId,
         } = req.body;
 
         // Ensure all required fields are present
-        if (!returnItemType || !returnItemDate || !storeId || !userId || !invoiceId) {
+        if (!returnItemDate || !storeId || !userId || !invoiceId) {
             return res.status(400).json({ error: "All fields are required." });
         }
 
+        // Validate foreign keys
         const store = await Store.findByPk(storeId);
-        if (!store) return res.status(400).json({ message: 'Invalid store ID' });
+        if (!store) return res.status(400).json({ message: "Invalid store ID" });
 
         const user = await User.findByPk(userId);
-        if (!user) return res.status(400).json({ message: 'Invalid user ID' });
+        if (!user) return res.status(400).json({ message: "Invalid user ID" });
 
         const invoice = await Invoice.findByPk(invoiceId);
-        if (!invoice) return res.status(400).json({ message: 'Invalid invoice ID' });
-
-        const stock = await Stock.findByPk(stockId);
-        if (!stock) return res.status(400).json({ message: 'Invalid stock ID' });
-
-        // Calculate the return amount
-        const returnAmount = parseFloat(returnQty) * parseFloat(product.productProfit);
+        if (!invoice) return res.status(400).json({ message: "Invalid invoice ID" });
 
         // Create the return
         const newReturn = await Return.create({
-            returnItemType,
             returnItemDate,
             store_storeId: storeId,
             user_userId: userId,
             invoice_invoiceId: invoiceId,
-            stockId: stockId,
         });
-
-        // If return type is "Exchange," adjust the stock quantity
-        if (returnItemType === "Refund") {
-            const updatedStockQty = parseFloat(stock.stockQty) + parseFloat(returnQty);
-            await stock.update({ stockQty: updatedStockQty });
-        }
 
         // Fetch the newly created return with associations
         const returnWithAssociations = await Return.findByPk(newReturn.returnItemId, {
-            include: [,
-                { model: Store, as: 'store' },
-                { model: User, as: 'user' },
-                { model: Invoice, as: 'invoice' },
-                { model: Stock, as: 'stock' },
+            include: [
+                { model: Store, as: "store" },
+                { model: User, as: "user" },
+                { model: Invoice, as: "invoice" },
             ],
         });
 
@@ -73,10 +56,9 @@ const getAllReturns = async (req, res) => {
     try {
         const returns = await Return.findAll({
             include: [
-                { model: Store, as: 'store' },
-                { model: User, as: 'user' },
-                { model: Invoice, as: 'invoice' },
-                { model: Stock, as: 'stock' },
+                { model: Store, as: "store" },
+                { model: User, as: "user" },
+                { model: Invoice, as: "invoice" },
             ],
         });
         res.status(200).json(returns);
@@ -89,22 +71,21 @@ const getAllReturns = async (req, res) => {
 const getReturnById = async (req, res) => {
     try {
         const { id } = req.params;
-        const returns = await Return.findByPk(id, {
+        const returnItem = await Return.findByPk(id, {
             include: [
-                { model: Store, as: 'store' },
-                { model: User, as: 'user' },
-                { model: Invoice, as: 'invoice' },
-                { model: Stock, as: 'stock' },
+                { model: Store, as: "store" },
+                { model: User, as: "user" },
+                { model: Invoice, as: "invoice" },
             ],
         });
 
-        if (returns) {
-            res.status(200).json(returns);
+        if (returnItem) {
+            res.status(200).json(returnItem);
         } else {
-            res.status(404).json({ message: 'Return not found' });
+            res.status(404).json({ message: "Return not found" });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: `An error occurred: ${error.message}` });
     }
 };
 
